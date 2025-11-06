@@ -26,22 +26,32 @@ function HeatmapBase({ data }: { data: DataPoint[] }) {
 
 function buildGrid(data: DataPoint[], cols: number, rows: number) {
   if (data.length === 0) return { cols, rows, values: new Float32Array(cols * rows) };
-  let min = data[0].value, max = data[0].value;
-  const tMin = data[0].timestamp, tMax = data[data.length - 1].timestamp;
-  for (let i = 1; i < data.length; i++) { const v = data[i].value; if (v < min) min = v; if (v > max) max = v; }
+  let min = data[0]!.value, max = data[0]!.value;
+  const tMin = data[0]!.timestamp, tMax = data[data.length - 1]!.timestamp;
+  for (let i = 1; i < data.length; i++) { const v = data[i]!.value; if (v < min) min = v; if (v > max) max = v; }
   const values = new Float32Array(cols * rows);
   const yScale = rows / Math.max(1e-6, max - min);
   const xScale = cols / Math.max(1, tMax - tMin);
   for (let i = 0; i < data.length; i++) {
-    const p = data[i];
+    const p = data[i]!;
     const cx = Math.min(cols - 1, Math.max(0, Math.floor((p.timestamp - tMin) * xScale)));
     const cy = Math.min(rows - 1, Math.max(0, rows - 1 - Math.floor((p.value - min) * yScale)));
     const idx = cy * cols + cx;
-    values[idx] += 1;
+    const current = values[idx] ?? 0;
+    values[idx] = current + 1;
   }
   // normalize
-  let vmax = 0; for (let i = 0; i < values.length; i++) if (values[i] > vmax) vmax = values[i];
-  if (vmax > 0) for (let i = 0; i < values.length; i++) values[i] /= vmax;
+  let vmax = 0;
+  for (let i = 0; i < values.length; i++) {
+    const val = values[i] ?? 0;
+    if (val > vmax) vmax = val;
+  }
+  if (vmax > 0) {
+    for (let i = 0; i < values.length; i++) {
+      const val = values[i] ?? 0;
+      values[i] = val / vmax;
+    }
+  }
   return { cols, rows, values };
 }
 
@@ -49,7 +59,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, grid: { cols: number; rows: num
   const cw = width / grid.cols; const ch = height / grid.rows;
   for (let y = 0; y < grid.rows; y++) {
     for (let x = 0; x < grid.cols; x++) {
-      const v = grid.values[y * grid.cols + x];
+      const v = grid.values[y * grid.cols + x] ?? 0;
       const col = heatColor(v);
       ctx.fillStyle = col;
       ctx.fillRect(x * cw, y * ch, Math.ceil(cw), Math.ceil(ch));

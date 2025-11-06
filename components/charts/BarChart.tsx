@@ -14,13 +14,14 @@ function BarChartBase({ data, color = '#93c5fd' }: { data: DataPoint[]; color?: 
       const { width, height } = resizeCanvasToDisplaySize(canvas);
       clearCanvas(ctx);
       if (data.length) {
-        let min = data[0].value, max = data[0].value;
-        for (let i = 1; i < data.length; i++) { const v = data[i].value; if (v < min) min = v; if (v > max) max = v; }
+        const first = data[0]!;
+        let min = first.value, max = first.value;
+        for (let i = 1; i < data.length; i++) { const v = data[i]!.value; if (v < min) min = v; if (v > max) max = v; }
         const barW = Math.max(1, Math.floor(width / data.length));
         const yScale = height / Math.max(1e-6, max - min);
         ctx.fillStyle = color;
         for (let i = 0; i < data.length; i++) {
-          const v = data[i].value; const h = (v - min) * yScale; const x = i * barW; const y = height - h;
+          const v = data[i]!.value; const h = (v - min) * yScale; const x = i * barW; const y = height - h;
           ctx.fillRect(x, y, barW - 1, h);
         }
       }

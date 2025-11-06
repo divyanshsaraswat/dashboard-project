@@ -14,7 +14,7 @@ export function DataTable({ data }: { data: DataPoint[] }) {
       <div style={{ height, position: 'relative' }}>
         <table style={{ position: 'absolute', top: offsetTop, left: 0, width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ position: 'sticky', top: -offsetTop, background: '#0f172a' }}>
+            <tr style={{ position: 'sticky', top: 0, background: '#0f172a', zIndex: 1 }}>
               <th style={th}>#</th>
               <th style={th}>Timestamp</th>
               <th style={th}>Value</th>

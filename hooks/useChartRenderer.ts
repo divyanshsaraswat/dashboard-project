@@ -8,8 +8,8 @@ export function useChartRenderer(points: DataPoint[], color = '#5eead4') {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number>();
   const vpRef = useRef<Viewport>({
-    xMin: points.length ? points[0].timestamp : Date.now() - 60_000,
-    xMax: points.length ? points[points.length - 1].timestamp : Date.now(),
+    xMin: points.length ? points[0]!.timestamp : Date.now() - 60_000,
+    xMax: points.length ? points[points.length - 1]!.timestamp : Date.now(),
     yMin: -Infinity,
     yMax: Infinity
   });
@@ -27,15 +27,15 @@ export function useChartRenderer(points: DataPoint[], color = '#5eead4') {
     const animate = () => {
       const { width, height } = resizeCanvasToDisplaySize(canvas);
       if (points.length) {
-        let yMin = points[0].value, yMax = points[0].value;
+        let yMin = points[0]!.value, yMax = points[0]!.value;
         for (let i = 1; i < points.length; i++) {
-          const v = points[i].value;
+          const v = points[i]!.value;
           if (v < yMin) yMin = v;
           if (v > yMax) yMax = v;
         }
         const vp = vpRef.current;
-        vp.xMin = points[0].timestamp;
-        vp.xMax = points[points.length - 1].timestamp;
+        vp.xMin = points[0]!.timestamp;
+        vp.xMax = points[points.length - 1]!.timestamp;
         vp.yMin = yMin - 1;
         vp.yMax = yMax + 1;
         const mapped = mapToPx(points, vp, width, height);

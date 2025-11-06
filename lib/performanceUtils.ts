@@ -26,9 +26,8 @@ export function measure<T>(label: string, fn: () => T): { result: T; ms: number 
 }
 
 export function getApproxMemoryMB(): number {
-  const anyNav = globalThis.navigator as any;
-  const mem = anyNav?.deviceMemory;
-  if (typeof mem === 'number') return mem * 1024;
-  return (performance as any).memory?.usedJSHeapSize ? (performance as any).memory.usedJSHeapSize / (1024 * 1024) : 0;
+  const perfMem = (performance as any).memory;
+  if (perfMem?.usedJSHeapSize) return perfMem.usedJSHeapSize / (1024 * 1024);
+  return 0;
 }
 

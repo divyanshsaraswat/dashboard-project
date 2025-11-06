@@ -27,7 +27,7 @@ export function mapToPx(points: DataPoint[], vp: Viewport, width: number, height
   const outX = new Float32Array(points.length);
   const outY = new Float32Array(points.length);
   for (let i = 0; i < points.length; i++) {
-    const p = points[i];
+    const p = points[i]!;
     outX[i] = (p.timestamp - vp.xMin) * xScale;
     outY[i] = yFlip - (p.value - vp.yMin) * yScale;
   }
@@ -40,8 +40,8 @@ export function drawLine(ctx: CanvasRenderingContext2D, xs: Float32Array, ys: Fl
   ctx.lineWidth = 1;
   ctx.strokeStyle = color;
   ctx.beginPath();
-  ctx.moveTo(xs[0], ys[0]);
-  for (let i = 1; i < xs.length; i++) ctx.lineTo(xs[i], ys[i]);
+  ctx.moveTo(xs[0]!, ys[0]!);
+  for (let i = 1; i < xs.length; i++) ctx.lineTo(xs[i]!, ys[i]!);
   ctx.stroke();
   ctx.restore();
 }

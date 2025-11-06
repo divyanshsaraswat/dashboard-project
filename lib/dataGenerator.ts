@@ -28,7 +28,7 @@ export function generateTick(prev: DataPoint | undefined): DataPoint {
 export function aggregate(points: DataPoint[], windowMs: number): DataPoint[] {
   if (points.length === 0) return points;
   const out: DataPoint[] = [];
-  let bucketStart = Math.floor(points[0].timestamp / windowMs) * windowMs;
+  let bucketStart = Math.floor(points[0]!.timestamp / windowMs) * windowMs;
   let acc = 0;
   let count = 0;
   let lastCategory = 'A';

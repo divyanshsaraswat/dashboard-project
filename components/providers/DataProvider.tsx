@@ -25,7 +25,7 @@ export function DataProvider({ initialData, children }: { initialData: DataPoint
   const bufferRef = useRef<DataPoint[]>(initialData);
   const [data, setData] = useState<DataState>(() => {
     const points = bufferRef.current;
-    const windowEnd = points.length ? points[points.length - 1].timestamp : Date.now();
+    const windowEnd = points.length ? points[points.length - 1]!.timestamp : Date.now();
     const windowStart = windowEnd - 60_000;
     return { points, windowStart, windowEnd };
   });
@@ -67,7 +67,7 @@ function binarySearchTimestamp(arr: DataPoint[], ts: number, upper = false) {
   let lo = 0, hi = arr.length;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
-    const v = arr[mid].timestamp;
+    const v = arr[mid]!.timestamp;
     if (v < ts || (upper && v === ts)) lo = mid + 1; else hi = mid;
   }
   return upper ? lo : Math.max(0, lo - 1);
