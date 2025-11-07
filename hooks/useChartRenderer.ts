@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { Viewport, resizeCanvasToDisplaySize, mapToPx, clearCanvas, drawLine } from '@/lib/canvasUtils';
+import { Viewport, resizeCanvasToDisplaySize, mapToPx, clearCanvas, drawLine, drawAxes, drawGrid } from '@/lib/canvasUtils';
 import { DataPoint } from '@/lib/types';
 
 export function useChartRenderer(points: DataPoint[], color = '#5eead4') {
@@ -21,11 +21,14 @@ export function useChartRenderer(points: DataPoint[], color = '#5eead4') {
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
+    // Enable high-quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     const animate = () => {
-      const { width, height } = resizeCanvasToDisplaySize(canvas);
+      const { width, height, dpr, displayWidth, displayHeight } = resizeCanvasToDisplaySize(canvas);
       if (points.length) {
         let yMin = points[0]!.value, yMax = points[0]!.value;
         for (let i = 1; i < points.length; i++) {
@@ -36,11 +39,16 @@ export function useChartRenderer(points: DataPoint[], color = '#5eead4') {
         const vp = vpRef.current;
         vp.xMin = points[0]!.timestamp;
         vp.xMax = points[points.length - 1]!.timestamp;
-        vp.yMin = yMin - 1;
-        vp.yMax = yMax + 1;
-        const mapped = mapToPx(points, vp, width, height);
+        vp.yMin = yMin - (yMax - yMin) * 0.1;
+        vp.yMax = yMax + (yMax - yMin) * 0.1;
         clearCanvas(ctx);
+        // Scale context for high DPI
+        ctx.scale(dpr, dpr);
+        const { chartX, chartY, chartWidth, chartHeight } = drawAxes(ctx, vp, displayWidth, displayHeight);
+        drawGrid(ctx, chartX, chartY, chartWidth, chartHeight, vp);
+        const mapped = mapToPx(points, vp, chartWidth, chartHeight, chartX, chartY);
         drawLine(ctx, mapped.x, mapped.y, color);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
       } else {
         clearCanvas(ctx);
       }

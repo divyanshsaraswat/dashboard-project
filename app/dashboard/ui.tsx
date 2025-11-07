@@ -12,7 +12,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { useDataStream } from '@/hooks/useDataStream';
 
 export function DashboardClient() {
-  const { data, push } = useDataContext();
+  const { data, push, filteredData } = useDataContext();
   useDataStream(push, 100);
   return (
     <main className="dashboard">
@@ -33,7 +33,7 @@ export function DashboardClient() {
         </div>
         <div className="panel">
           <h3 style={{ marginTop: 0 }}>Data</h3>
-          <DataTable data={data.points} />
+          <DataTable data={filteredData} />
         </div>
       </section>
     </main>

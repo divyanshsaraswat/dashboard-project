@@ -4,12 +4,17 @@ import { useMemo, useState } from 'react';
 import { useDataContext } from '@/components/providers/DataProvider';
 
 export function FilterPanel() {
-  const { data, setAggregation, aggregation } = useDataContext();
-  const [category, setCategory] = useState<'all' | 'A' | 'B'>('all');
+  const { data, setAggregation, aggregation, category, setCategory, filteredData } = useDataContext();
   const count = useMemo(() => data.points.length, [data.points.length]);
+  const filteredCount = useMemo(() => filteredData.length, [filteredData.length]);
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <div className="badge">Points: <strong>{count.toLocaleString()}</strong></div>
+      {category !== 'all' && (
+        <div className="badge" style={{ background: '#1e3a5f' }}>
+          Filtered: <strong>{filteredCount.toLocaleString()}</strong>
+        </div>
+      )}
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Aggregation</span>
         <select value={aggregation} onChange={e => setAggregation(e.target.value as any)}>

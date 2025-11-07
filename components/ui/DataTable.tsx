@@ -4,7 +4,7 @@ import { useMemo, useRef } from 'react';
 import { DataPoint } from '@/lib/types';
 import { useVirtualization } from '@/hooks/useVirtualization';
 
-export function DataTable({ data }: { data: DataPoint[] }) {
+export function DataTable({ data, showIndexOffset = 0 }: { data: DataPoint[]; showIndexOffset?: number }) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const rowHeight = 24; const viewportHeight = 300;
   const { start, end, offsetTop, height, setScrollTop } = useVirtualization(data.length, rowHeight, viewportHeight, 8);
@@ -24,7 +24,7 @@ export function DataTable({ data }: { data: DataPoint[] }) {
           <tbody>
             {rows.map((p, i) => (
               <tr key={start + i} style={{ height: rowHeight }}>
-                <td style={td}>{start + i + 1}</td>
+                <td style={td}>{showIndexOffset + start + i + 1}</td>
                 <td style={td}>{new Date(p.timestamp).toLocaleTimeString()}</td>
                 <td style={td}>{p.value.toFixed(3)}</td>
                 <td style={td}>{p.category}</td>

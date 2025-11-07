@@ -10,18 +10,29 @@ function HeatmapBase({ data }: { data: DataPoint[] }) {
   const grid = useMemo(() => buildGrid(data, 64, 32), [data]);
 
   useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
+    const canvas = canvasRef.current; if (!canvas) return; 
+    const ctx = canvas.getContext('2d', { alpha: false }); 
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     const animate = () => {
-      const { width, height } = resizeCanvasToDisplaySize(canvas);
+      const { width, height, dpr, displayWidth, displayHeight } = resizeCanvasToDisplaySize(canvas);
       clearCanvas(ctx);
-      drawGrid(ctx, grid, width, height);
+      ctx.scale(dpr, dpr);
+      drawGrid(ctx, grid, displayWidth, displayHeight);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       rafRef.current = requestAnimationFrame(animate);
     };
     rafRef.current = requestAnimationFrame(animate);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [grid]);
 
-  return <div className="panel" style={{ height: 280 }}><canvas ref={canvasRef} /></div>;
+  return (
+    <div className="panel" style={{ height: 280, minHeight: 280 }}>
+      <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600, color: '#e6e8eb' }}>Heatmap - Data Density</h4>
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'calc(100% - 24px)', display: 'block' }} />
+    </div>
+  );
 }
 
 function buildGrid(data: DataPoint[], cols: number, rows: number) {
@@ -56,7 +67,13 @@ function buildGrid(data: DataPoint[], cols: number, rows: number) {
 }
 
 function drawGrid(ctx: CanvasRenderingContext2D, grid: { cols: number; rows: number; values: Float32Array }, width: number, height: number) {
-  const cw = width / grid.cols; const ch = height / grid.rows;
+  const legendWidth = 20;
+  const legendPadding = 10;
+  const chartWidth = width - legendWidth - legendPadding * 2;
+  const cw = chartWidth / grid.cols;
+  const ch = height / grid.rows;
+  
+  // Draw heatmap grid
   for (let y = 0; y < grid.rows; y++) {
     for (let x = 0; x < grid.cols; x++) {
       const v = grid.values[y * grid.cols + x] ?? 0;
@@ -65,6 +82,56 @@ function drawGrid(ctx: CanvasRenderingContext2D, grid: { cols: number; rows: num
       ctx.fillRect(x * cw, y * ch, Math.ceil(cw), Math.ceil(ch));
     }
   }
+  
+  // Draw legend
+  const legendX = chartWidth + legendPadding;
+  const legendHeight = height * 0.6;
+  const legendY = (height - legendHeight) / 2;
+  const legendSteps = 50;
+  
+  // Draw gradient
+  for (let i = 0; i < legendSteps; i++) {
+    const t = i / (legendSteps - 1);
+    const col = heatColor(t);
+    ctx.fillStyle = col;
+    const y = legendY + (legendSteps - 1 - i) * (legendHeight / legendSteps);
+    ctx.fillRect(legendX, y, legendWidth, Math.ceil(legendHeight / legendSteps) + 1);
+  }
+  
+  // Draw legend border
+  ctx.strokeStyle = '#4a5568';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+  
+  // Draw legend labels
+  ctx.save();
+  ctx.font = '10px system-ui';
+  ctx.fillStyle = '#98a2b3';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('High', legendX + legendWidth + 5, legendY);
+  ctx.fillText('Low', legendX + legendWidth + 5, legendY + legendHeight);
+  ctx.fillText('Density', legendX + legendWidth + 5, legendY + legendHeight / 2);
+  ctx.restore();
+  
+  // Draw axis labels
+  ctx.save();
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('Time', chartWidth / 2, height - 20);
+  ctx.restore();
+  
+  ctx.save();
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.translate(15, height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Value', 0, 0);
+  ctx.restore();
 }
 
 function heatColor(t: number) {

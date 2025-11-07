@@ -10,6 +10,9 @@ interface DataContextValue {
   push: (p: DataPoint) => void;
   setAggregation: (win: AggregationWindow | 'raw') => void;
   aggregation: AggregationWindow | 'raw';
+  category: 'all' | 'A' | 'B';
+  setCategory: (cat: 'all' | 'A' | 'B') => void;
+  filteredData: DataPoint[];
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -22,6 +25,7 @@ export function useDataContext() {
 
 export function DataProvider({ initialData, children }: { initialData: DataPoint[]; children: React.ReactNode }) {
   const [aggregation, setAgg] = useState<AggregationWindow | 'raw'>('raw');
+  const [category, setCategory] = useState<'all' | 'A' | 'B'>('all');
   const bufferRef = useRef<DataPoint[]>(initialData);
   const [data, setData] = useState<DataState>(() => {
     const points = bufferRef.current;
@@ -57,8 +61,19 @@ export function DataProvider({ initialData, children }: { initialData: DataPoint
       const size = aggregation === '1m' ? 60_000 : aggregation === '5m' ? 300_000 : 3_600_000;
       points = aggregate(points, size);
     }
-    return { data: { points, windowStart, windowEnd }, setWindow, push, setAggregation, aggregation };
-  }, [data, setWindow, push, aggregation, setAggregation]);
+    // Apply category filter for table view
+    const filteredData = category === 'all' ? points : points.filter(p => p.category === category);
+    return { 
+      data: { points, windowStart, windowEnd }, 
+      setWindow, 
+      push, 
+      setAggregation, 
+      aggregation,
+      category,
+      setCategory,
+      filteredData
+    };
+  }, [data, setWindow, push, aggregation, setAggregation, category]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
